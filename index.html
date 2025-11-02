@@ -214,14 +214,15 @@
     /* Tip box shown under the result name */
     .result .tip {
       margin-top: 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
       padding: 10px 12px;
       border-radius: 12px;
       color: var(--muted);
       font-size: 13px;
       max-width: 880px;
-      margin-left: auto; margin-right: auto;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .footer {
@@ -267,7 +268,8 @@
         transform: translateX(6px)
       }
     }
-    body{
+
+    body {
       margin: 0;
       /* Background image (put a file named `bg.jpg` beside this HTML). The radial-gradient is
          a fallback and will show if the image isn't available. */
@@ -277,7 +279,8 @@
       background-repeat: no-repeat;
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      display: grid; place-items: center;
+      display: grid;
+      place-items: center;
       padding: 32px;
     }
   </style>
@@ -287,7 +290,8 @@
   <div class="app">
     <div class="card">
       <h1>🎰 Wichteln aber Geil</h1>
-      <p class="lead">Lizzie, Adrian, Mia, Mina, Ammi, Max, Vali, Paula, Leo, Eli, Anna, Hanno, Kili, Hannah, Luke, Mats und Sinan</p>
+      <p class="lead">Lizzie, Adrian, Mia, Mina, Ammi, Max, Vali, Paula, Leo, Eli, Anna, Hanno, Kili, Hannah, Luke, Mats
+        und Sinan</p>
 
       <div class="row">
         <label class="input" aria-label="Enter code to spin">
@@ -297,9 +301,9 @@
       </div>
 
       <div id="machine" class="machine hidden" aria-live="polite">
-          <div id="reels" class="reels" role="group" aria-label="Reels"></div>
-          <div id="resultName" class="name"> </div>
-          <div id="tipBox" class="tip hidden" aria-live="polite"></div>
+        <div id="reels" class="reels" role="group" aria-label="Reels"></div>
+        <div id="resultName" class="name"> </div>
+        <div id="tipBox" class="tip hidden" aria-live="polite"></div>
       </div>
 
       <div class="footer">
@@ -317,23 +321,23 @@
 
     // Per-name tips (shown in the tip box). Keys are uppercase names.
     const TIPS = {
-      'LIZZIE': 'Tipp: Lizzie studiert Informatik.',
+      'LIZZIE': 'Tipp: Lizzie mag keine Glasflaschen.',
       'ADRIAN': 'Tipp: Adrian studiert Elektrotechnik.',
       'MIA': 'Tipp: Mia wohnt im Westen.',
-      'MINA': 'Tipp: Mina ist Türkin',
-      'AMMI': 'Tipp: Ammi ist swiftie',
+      'MINA': 'Tipp: Mina ist Türkin.',
+      'AMMI': 'Tipp: Ammi ist Swiftie.',
       'MAX': 'Tipp: Max mag Fußball.',
-      'VALI': 'Tipp: Vali ist zugezogen.',
-      'PAULA': 'Tipp: Schmuck- oder Beauty-Accessoire in neutralem Stil.', // TODO
+      'VALI': 'Tipp: Vali mag Enten (aber nur die weißen).',
+      'PAULA': 'Tipp: Paula liebt Brasilien (Land).',
       'LEO': 'Tipp: Leo ist Franzose.',
-      'ELI': 'Tipp: Eli mag CheeTah Tabak Gelb ',
+      'ELI': 'Tipp: Eli mag Cheetah Gelb (Tabak).',
       'ANNA': 'Tipp: Anna glaubt alles.',
-      'HANNO': 'Tipp: Nützliches für Arbeit oder Hobby — denk praktisch.', // ToDo
-      'KILI': 'Tipp: Kili mag Bohrmaschinen und Fahrräder.',
-      'HANNAH': 'Tipp: Hannah hat rote Haare.',
-      'LUKE': 'Tipp: Luke ist groß',
-      'SINAN': 'Tipp: Enttäusch mich nicht',
-      'MATS': 'Tipp: Mats ' // TODO
+      'HANNO': 'Tipp: Hanno hört geren Ami Rap.',
+      'KILI': 'Tipp: Kili war mal Rapper.',
+      'HANNAH': 'Tipp: Hannahs Studio ist im 2. OG.',
+      'LUKE': 'Tipp: Luke fährt gerne u1 u3 u1 u2.',
+      'SINAN': 'Tipp: Sinan studiert gar nicht Architektur.',
+      'MATS': 'Tipp: Mats liebt Labubus.'
     };
 
     // Build a deterministic code→name mapping using a shuffle seeded by SALT.
@@ -355,9 +359,9 @@
       base.forEach((code, i) => { map[code] = shuffled[i]; });
       return map;
     }
-    const CODE_TO_NAME = buildMapping(ITEMS, 'xx');
+    const CODE_TO_NAME = buildMapping(ITEMS, 'irgnr3e');
 
-    // =============================
+        // =============================
     // Utilities
     // =============================
     function sanitizeCode(raw) {
@@ -446,11 +450,11 @@
     // =============================
     // UI wiring
     // =============================
-  const input = document.getElementById('nameInput');
-  const spinBtn = document.getElementById('spinBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const resultName = document.getElementById('resultName');
-  const tipBox = document.getElementById('tipBox');
+    const input = document.getElementById('nameInput');
+    const spinBtn = document.getElementById('spinBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultName = document.getElementById('resultName');
+    const tipBox = document.getElementById('tipBox');
 
     function showMachine(show) { document.getElementById('machine').classList.toggle('hidden', !show); }
     function updateShareLink(code) {
