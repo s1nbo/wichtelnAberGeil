@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wichteln Aber Geil</title>
+  <meta name="description" content="Dein Name" />
+  <style>
+    :root {
+      --bg: #0e0f13;
+      --panel: #171923;
+      --accent: #7c3aed;
+      --text: #e6e6f0;
+      --muted: #a0a3b1;
+      --win: #22c55e;
+      --danger: #ef4444;
+      --reel-width: 420px;
+      /* width of each letter reel */
+      --reel-height: 64px;
+      /* height of one symbol cell */
+      --reel-gap: 6px;
+      --reel-radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% -20%, #1f2340 0, #0e0f13 55%, #0e0f13 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+
+    .app {
+      width: min(980px, 100%);
+    }
+
+    .card {
+      background: linear-gradient(180deg, #1a1c28 0, #141722 100%);
+      border: 1px solid #2a2e45;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      padding: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-size: clamp(24px, 4vw, 36px);
+    }
+
+    p.lead {
+      color: var(--muted);
+      margin: 0 0 18px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid #2c3048;
+      border-radius: 14px;
+      padding: 8px 10px 8px 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .input input {
+      background: transparent;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      font-size: 18px;
+      padding: 8px 6px;
+      min-width: 0;
+    }
+
+    .input input::placeholder {
+      color: #6f7391;
+    }
+
+    .btn {
+      appearance: none;
+      cursor: pointer;
+      user-select: none;
+      border: 0;
+      outline: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      font-size: 16px;
+      color: white;
+      background: linear-gradient(180deg, #8b5cf6 0, #7c3aed 100%);
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transition: transform .06s ease, box-shadow .2s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 32px rgba(124, 58, 237, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .machine {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 20px;
+      background: #0f111b;
+      border: 1px solid #2a2e45;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .machine::before {
+      /* subtle glow */
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 22px;
+      background: conic-gradient(from 0deg, #8b5cf6, #22c55e, #06b6d4, #8b5cf6);
+      filter: blur(24px);
+      opacity: 0.15;
+      z-index: 0;
+    }
+
+    .reels {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: var(--reel-gap);
+      padding: 8px;
+    }
+
+    .reel {
+      width: var(--reel-width);
+      height: calc(var(--reel-height) * 1.2);
+      border-radius: var(--reel-radius);
+      background: linear-gradient(180deg, #111427 0, #0c0f1d 100%);
+      border: 1px solid #2a2d44;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .reel-track {
+      position: absolute;
+      inset: 0;
+      will-change: transform;
+      display: grid;
+      grid-auto-rows: var(--reel-height);
+      align-content: start;
+      justify-items: center;
+      padding-block: 6px;
+      transition: transform 1.8s cubic-bezier(.18, .7, .18, 1);
+    }
+
+    .cell {
+      width: 100%;
+      height: var(--reel-height);
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #e9e9f6;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15), 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .cell.muted {
+      color: #7f83a6;
+      font-weight: 700;
+    }
+
+    .result {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .result .name {
+      display: inline-block;
+      margin-left: 6px;
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    /* Tip box shown under the result name */
+    .result .tip {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 880px;
+      margin-left: auto; margin-right: auto;
+    }
+
+    .footer {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .footer a {
+      color: #c4b5fd;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .shake {
+      animation: shake .4s ease;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-6px)
+      }
+
+      75% {
+        transform: translateX(6px)
+      }
+    }
+    body{
+      margin: 0;
+      /* Background image (put a file named `bg.jpg` beside this HTML). The radial-gradient is
+         a fallback and will show if the image isn't available. */
+      background-image: url('bg.jpg'), radial-gradient(1200px 800px at 20% -20%, #1f2340 0, #0e0f13 55%, #0e0f13 100%);
+      background-size: cover, auto;
+      background-position: center, 20% -20%;
+      background-repeat: no-repeat;
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: grid; place-items: center;
+      padding: 32px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="card">
+      <h1>🎰 Wichteln aber Geil</h1>
+      <p class="lead">Lizzie, Adrian, Mia, Mina, Ammi, Max, Vali, Paula, Leo, Eli, Anna, Hanno, Kili, Hannah, Luke, Mats und Sinan</p>
+
+      <div class="row">
+        <label class="input" aria-label="Enter code to spin">
+          <input id="nameInput" type="text" maxlength="24" autocomplete="off" />
+        </label>
+        <button id="spinBtn" class="btn" type="button">Spin ✨</button>
+      </div>
+
+      <div id="machine" class="machine hidden" aria-live="polite">
+          <div id="reels" class="reels" role="group" aria-label="Reels"></div>
+          <div id="resultName" class="name"> </div>
+          <div id="tipBox" class="tip hidden" aria-live="polite"></div>
+      </div>
+
+      <div class="footer">
+        <div>
+          <a id="shareLink" </a></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =============================
+
+    const ITEMS = ['Lizzie', 'Adrian', 'Mia', 'Mina', 'Ammi', 'Max', 'Vali', 'Paula', 'Leo', 'Eli', 'Anna', 'Hanno', 'Kili', 'Hannah', 'Luke', 'Sinan', 'Mats'];
+
+    // Per-name tips (shown in the tip box). Keys are uppercase names.
+    const TIPS = {
+      'LIZZIE': 'Tipp: Lizzie studiert Informatik.',
+      'ADRIAN': 'Tipp: Adrian studiert Elektrotechnik.',
+      'MIA': 'Tipp: Mia wohnt im Westen.',
+      'MINA': 'Tipp: Mina ist Türkin',
+      'AMMI': 'Tipp: Ammi ist swiftie',
+      'MAX': 'Tipp: Max mag Fußball.',
+      'VALI': 'Tipp: Vali ist zugezogen.',
+      'PAULA': 'Tipp: Schmuck- oder Beauty-Accessoire in neutralem Stil.', // TODO
+      'LEO': 'Tipp: Leo ist Franzose.',
+      'ELI': 'Tipp: Eli mag CheeTah Tabak Gelb ',
+      'ANNA': 'Tipp: Anna glaubt alles.',
+      'HANNO': 'Tipp: Nützliches für Arbeit oder Hobby — denk praktisch.', // ToDo
+      'KILI': 'Tipp: Kili mag Bohrmaschinen und Fahrräder.',
+      'HANNAH': 'Tipp: Hannah hat rote Haare.',
+      'LUKE': 'Tipp: Luke ist groß',
+      'SINAN': 'Tipp: Enttäusch mich nicht',
+      'MATS': 'Tipp: Mats ' // TODO
+    };
+
+    // Build a deterministic code→name mapping using a shuffle seeded by SALT.
+    // Ensures a different mapping (tries to avoid self-maps).
+    function buildMapping(items, salt) {
+      const base = items.map(s => String(s).toUpperCase().trim()).filter(Boolean);
+      const seed = hash(String(salt));
+      const shuffled = dShuffle(base, seed);
+      // if any item maps to itself, rotate by 1 as a simple derangement fix
+      let hasFixed = base.some((v, i) => v === shuffled[i]);
+      if (hasFixed) {
+        shuffled.push(shuffled.shift()); // rotate left by 1
+        // if still unlucky (tiny chance), swap last two
+        if (base.some((v, i) => v === shuffled[i]) && shuffled.length > 1) {
+          const n = shuffled.length;[shuffled[n - 1], shuffled[n - 2]] = [shuffled[n - 2], shuffled[n - 1]];
+        }
+      }
+      const map = {};
+      base.forEach((code, i) => { map[code] = shuffled[i]; });
+      return map;
+    }
+    const CODE_TO_NAME = buildMapping(ITEMS, 'yo-35');
+
+    // =============================
+    // Utilities
+    // =============================
+    function sanitizeCode(raw) {
+      return (raw || '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9\-]+/g, '')
+        .slice(0, 24);
+    }
+    function hash(str) { let h = 5381; for (let i = 0; i < str.length; i++) { h = ((h << 5) + h) + str.charCodeAt(i); } return (h >>> 0); }
+    function pickNameForCode(code) {
+      const c = sanitizeCode(code);
+      if (!CODE_TO_NAME[c]) throw new Error('Invalid code.');
+      return String(CODE_TO_NAME[c]).toUpperCase();
+    }
+    // deterministic PRNG & shuffle
+    function prng(seed) { return () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 0xFFFFFFFF; }; }
+    function dShuffle(arr, seed) {
+      const out = arr.slice(); const rnd = prng(seed >>> 0);
+      for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1));[out[i], out[j]] = [out[j], out[i]]; }
+      return out;
+    }
+
+    // =============================
+    // Reel building (one big reel of FULL NAMES)
+    // =============================
+    function clearReels() { document.getElementById('reels').innerHTML = ''; }
+
+    function buildFullNameReel(targetName, seedBase) {
+      const reel = document.createElement('div');
+      reel.className = 'reel';
+      const track = document.createElement('div');
+      track.className = 'reel-track';
+      reel.appendChild(track);
+
+      // unique list of full names to cycle through while spinning
+      const seen = new Set();
+      const pool = ITEMS
+        .map(s => String(s).toUpperCase().trim())
+        .filter(s => s.length)
+        .filter(s => { if (seen.has(s)) return false; seen.add(s); return true; });
+
+      const seed = hash(String(seedBase));
+      const shuffled = dShuffle(pool, seed);
+      const loops = 1;
+
+      for (let r = 0; r < loops; r++) {
+        for (const name of shuffled) {
+          const cell = document.createElement('div');
+          cell.className = 'cell muted';
+          cell.textContent = name;
+          track.appendChild(cell);
+        }
+      }
+      // final winning cell
+      const win = document.createElement('div');
+      win.className = 'cell';
+      win.textContent = targetName;
+      track.appendChild(win);
+
+      track.style.transform = 'translateY(0)';
+      return { reel, track };
+    }
+
+    function spinTo(track) {
+      const cellH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reel-height'));
+      const itemCount = track.children.length;
+      const targetOffset = -(itemCount - 1) * cellH;
+      requestAnimationFrame(() => {
+        // Fixed ~20s animation
+        track.style.transition = 'transform 20s cubic-bezier(.18,.7,.18,1)';
+        track.style.transform = `translateY(${targetOffset}px)`;
+      });
+    }
+
+    function createReelForFullName(fullName, seedBase) {
+      const reels = document.getElementById('reels');
+      clearReels();
+      const { reel, track } = buildFullNameReel(fullName, seedBase);
+      reels.appendChild(reel);
+      setTimeout(() => spinTo(track), 120);
+    }
+
+    // =============================
+    // UI wiring
+    // =============================
+  const input = document.getElementById('nameInput');
+  const spinBtn = document.getElementById('spinBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const resultName = document.getElementById('resultName');
+  const tipBox = document.getElementById('tipBox');
+
+    function showMachine(show) { document.getElementById('machine').classList.toggle('hidden', !show); }
+    function updateShareLink(code) {
+      const url = new URL(location.href);
+      if (code) { url.searchParams.set('code', code); } else { url.searchParams.delete('code'); }
+      document.getElementById('shareLink').href = url.toString();
+    }
+    function indicateInvalid() {
+      const wrap = input.closest('.input');
+      wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+    }
+
+    function spin() {
+      const code = sanitizeCode(input.value);
+      input.value = code;
+      if (!code) { showMachine(false); indicateInvalid(); return; }
+      try {
+        const chosen = pickNameForCode(code);
+        showMachine(true);
+        // For testing: store the chosen name and also display it visibly.
+        resultName.setAttribute('data-chosen', chosen);
+        // resultName.textContent = chosen; // show name for testing purposes
+        createReelForFullName(chosen, code);
+        updateShareLink(code);
+      } catch (err) {
+        showMachine(false);
+        updateShareLink('');
+        indicateInvalid();
+        alert('Invalid code.');
+      }
+    }
+
+    spinBtn.addEventListener('click', spin);
+    clearBtn.addEventListener('click', () => { input.value = ''; showMachine(false); updateShareLink(''); input.focus(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') spin(); });
+
+    (function initFromQuery() {
+      const params = new URLSearchParams(location.search);
+      const code = sanitizeCode(params.get('code') || '');
+      if (code) { input.value = code; spin(); }
+    })();
+  </script>
+
+</body>
+
+</html>
