@@ -437,7 +437,10 @@
       clearReels();
       const { reel, track } = buildFullNameReel(fullName, seedBase);
       reels.appendChild(reel);
+      // start the spin shortly after insertion
       setTimeout(() => spinTo(track), 120);
+      // return the track so callers can listen for the end of the transition
+      return track;
     }
 
     // =============================
@@ -469,8 +472,22 @@
         showMachine(true);
         // For testing: store the chosen name and also display it visibly.
         resultName.setAttribute('data-chosen', chosen);
-        // resultName.textContent = chosen; // show name for testing purposes
-        createReelForFullName(chosen, code);
+        // hide tip while spinning
+        if (tipBox) {
+          tipBox.classList.add('hidden');
+          tipBox.textContent = '';
+        }
+        // create the reel and get the track so we can show the tip when the animation ends
+        const track = createReelForFullName(chosen, code);
+        if (track && tipBox) {
+          // show the tip once the spin transition ends
+          const onEnd = () => {
+            const tip = TIPS[String(chosen).toUpperCase()] || '';
+            tipBox.textContent = tip;
+            tipBox.classList.toggle('hidden', !tip);
+          };
+          track.addEventListener('transitionend', onEnd, { once: true });
+        }
         updateShareLink(code);
       } catch (err) {
         showMachine(false);
@@ -481,7 +498,9 @@
     }
 
     spinBtn.addEventListener('click', spin);
-    clearBtn.addEventListener('click', () => { input.value = ''; showMachine(false); updateShareLink(''); input.focus(); });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => { input.value = ''; showMachine(false); updateShareLink(''); if (tipBox) { tipBox.classList.add('hidden'); tipBox.textContent = ''; } input.focus(); });
+    }
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') spin(); });
 
     (function initFromQuery() {
