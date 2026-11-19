@@ -966,10 +966,37 @@
       }
 
       // =================================================================
-      // Sound (Web Audio, no files)
+      // Sound (Web Audio synth + the ohh-yeah.mp4 voice clip)
       // =================================================================
       const Sound = (() => {
         let ctx = null, master = null;
+        // "Oh yeah!" clip. Played via <audio>; unlocked muted on the first tap so iOS
+        // also lets it play later from timers (e.g. after the reel stops).
+        const ohClip = new Audio('ohh-yeah.mp4');
+        ohClip.preload = 'auto';
+        let ohLast = -Infinity, ohUnlocked = false;
+        function unlockClip() {
+          window.removeEventListener('pointerup', unlockClip, true);
+          window.removeEventListener('keydown', unlockClip, true);
+          if (ohUnlocked) return;
+          ohClip.muted = true;
+          const p = ohClip.play();
+          const done = () => { if (!ohUnlocked) { ohClip.pause(); ohClip.currentTime = 0; } ohClip.muted = false; ohUnlocked = true; };
+          if (p) p.then(done, () => { ohClip.muted = false; }); else done();
+        }
+        window.addEventListener('pointerup', unlockClip, true);
+        window.addEventListener('keydown', unlockClip, true);
+        function playOhYeah() {
+          if (muted) return;
+          const now = performance.now();
+          if (now - ohLast < 800) return; // toast + Vector at the same moment -> one shout
+          ohLast = now;
+          ohUnlocked = true;
+          ohClip.muted = false;
+          try { ohClip.currentTime = 0; } catch (e) { /* not loaded yet */ }
+          const p = ohClip.play();
+          if (p) p.catch(() => {});
+        }
         let muted = store.get(MUTE_KEY) === '1';
         function ensure() {
           if (muted) return null;
@@ -1011,7 +1038,7 @@
           tick() { tone(1800 + Math.random() * 400, { type: 'triangle', dur: 0.05, vol: 0.07 }); },
           clack() { tone(95, { type: 'square', dur: 0.09, vol: 0.1 }); tone(190, { type: 'triangle', dur: 0.07, vol: 0.08 }); },
           zap() { tone(1400, { type: 'sawtooth', dur: 0.6, vol: 0.06, to: 90 }); },
-          ohYeah() { bell(392, 0, 0.12); bell(587.33, 0.14, 0.12); },
+          ohYeah: playOhYeah,
           jingle() { // "Jingle bells, jingle bells, jingle all the way"
             const E = 659.25, G = 783.99, C = 523.25, D = 587.33, q = 0.19;
             [[E, 0], [E, 1], [E, 2], [E, 4], [E, 5], [E, 6], [E, 8], [G, 9], [C, 10], [D, 11], [E, 12]]
@@ -1020,7 +1047,7 @@
             bell(1318.51, 12 * q + 0.08, 0.06);
           },
           get muted() { return muted; },
-          setMuted(m) { muted = m; store.set(MUTE_KEY, m ? '1' : '0'); },
+          setMuted(m) { muted = m; if (m) ohClip.pause(); store.set(MUTE_KEY, m ? '1' : '0'); },
         };
       })();
 
@@ -1105,7 +1132,9 @@
       // =================================================================
       const toastEl = $('#toast');
       let toastTimer;
+      const OH_YEAH = /oh+ ?yeah/i; // any text that says it also plays the clip
       function toast(text) {
+        if (OH_YEAH.test(text)) Sound.ohYeah();
         toastEl.textContent = text;
         toastEl.hidden = false;
         toastEl.style.animation = 'none';
@@ -1290,7 +1319,6 @@
           treeClicks = 0;
           const on = document.body.classList.toggle('vector');
           toast(on ? '🚀 Vector-Modus: Oh yeah! Klick mal auf ihn.' : 'Vector ist zurück in seiner Festung.');
-          if (on) Sound.ohYeah();
           // phones: big Vector only visits briefly (see .vec-show in CSS)
           document.body.classList.toggle('vec-show', on);
           clearTimeout(vecShowTimer);
@@ -1335,7 +1363,9 @@
       let vecLine = 0, vecTimer, peekTimer, lpTimer, lpFired = false, shrinking = false;
 
       function vectorPeek(text) {
-        vecPeek.querySelector('.vec-say').textContent = text || pick(['Oh yeah! 🎁', 'Gute Wahl. Oh yeah!', 'Aber Geil! 😎']);
+        const line = text || pick(['Oh yeah! 🎁', 'Gute Wahl. Oh yeah!', 'Aber Geil! 😎']);
+        vecPeek.querySelector('.vec-say').textContent = line;
+        if (OH_YEAH.test(line)) Sound.ohYeah();
         vecPeek.classList.add('show');
         clearTimeout(peekTimer);
         peekTimer = setTimeout(() => vecPeek.classList.remove('show'), 3400);
@@ -1462,7 +1492,6 @@
           box.classList.remove('up');
           const r = head.getBoundingClientRect();
           Confetti.burst(r.left + r.width / 2, r.top, { n: 30, only: ['🐟', '🦑', '⭐'], spread: 60, speed: [7, 13] });
-          Sound.ohYeah();
           toast('😎 Du hast Vector gefunden! Oh yeah!');
         });
         setTimeout(peek, 10000 + Math.random() * 10000);
