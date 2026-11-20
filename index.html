@@ -847,12 +847,15 @@
       // ---- DRAW:BEGIN ----
       /* =================================================================
        * CONFIG: set this up BEFORE sending the link, then don't touch it.
-       * Changing NAMES (even the order), SALT or PAST_DRAWS reshuffles
-       * everybody, so whoever already spun would have a stale name.
+       * Changing NAMES (even the order), SALT, PAST_DRAWS or FIRST_ATTEMPT
+       * reshuffles everybody, so whoever already spun would have a stale name.
        * ================================================================= */
       const YEAR = 2026;
       const NAMES = ['Mia', 'Mina', 'Ammi', 'Max', 'Leo', 'Eli', 'Anna', 'Hanno', 'Kili', 'Sinan', 'Mats'];
       const SALT = 'wag-2026-gluehwein';
+      // Seed attempt to start from. 15 keeps the 2026 draw exactly as it went live,
+      // after two unused 2025 drafts were dropped from PAST_DRAWS. Don't change.
+      const FIRST_ATTEMPT = 15;
 
       // giver -> receiver pairs that must never happen again
       const PAST_DRAWS = {
@@ -862,20 +865,6 @@
           VALI: 'LUKE', PAULA: 'ADRIAN', LEO: 'ELI', ELI: 'MINA', ANNA: 'AMMI', HANNO: 'HELENA',
           KILI: 'HANNO', HANNAH: 'SINAN', LUKE: 'KILI', SINAN: 'PAULA', MATS: 'MIA', HELENA: 'VALI',
         },
-        // 2025 first version, before Helena (salt 'irgnr3e7'), live ~20h, so some people may have seen it
-        '2025-early': {
-          LIZZIE: 'ELI', ADRIAN: 'AMMI', MIA: 'MAX', MINA: 'LEO', AMMI: 'LIZZIE', MAX: 'HANNAH',
-          VALI: 'PAULA', PAULA: 'HANNO', LEO: 'ANNA', ELI: 'SINAN', ANNA: 'MATS', HANNO: 'MINA',
-          KILI: 'MIA', HANNAH: 'LUKE', LUKE: 'KILI', SINAN: 'VALI', MATS: 'ADRIAN',
-        },
-        // 2025 second version (salt '40i6591'), live ~14 min
-        '2025-14min': {
-          LIZZIE: 'MATS', ADRIAN: 'LEO', MIA: 'ADRIAN', MINA: 'HANNO', AMMI: 'HANNAH', MAX: 'LUKE',
-          VALI: 'SINAN', PAULA: 'HELENA', LEO: 'MIA', ELI: 'MAX', ANNA: 'LIZZIE', HANNO: 'VALI',
-          KILI: 'AMMI', HANNAH: 'ANNA', LUKE: 'ELI', SINAN: 'PAULA', MATS: 'KILI', HELENA: 'MINA',
-        },
-        // 2024: add the year-1 pairs here if anyone remembers them, e.g.
-        // '2024': { LIZZIE: 'MAX', ADRIAN: 'MIA' },
       };
 
       function key(name) {
@@ -901,13 +890,13 @@
       // Shuffle everyone into a line, each person gifts the next one, the last gifts the first.
       // One big gift circle means nobody draws themselves and there are no A<->B swaps.
       // Retry with the next seed until no pair from a past year repeats.
-      function drawPairs(names, salt, pastDraws) {
+      function drawPairs(names, salt, pastDraws, firstAttempt = 0) {
         const keys = names.map(key);
         const forbidden = new Set();
         for (const draw of Object.values(pastDraws)) {
           for (const [giver, receiver] of Object.entries(draw)) forbidden.add(giver + '>' + receiver);
         }
-        for (let attempt = 0; attempt < 100000; attempt++) {
+        for (let attempt = firstAttempt; attempt < firstAttempt + 100000; attempt++) {
           const rnd = mulberry32(hashStr(salt + '#' + attempt));
           const line = keys.slice();
           for (let i = line.length - 1; i > 0; i--) {
@@ -922,7 +911,7 @@
       }
       // ---- DRAW:END ----
 
-      const ASSIGN = drawPairs(NAMES, SALT, PAST_DRAWS);
+      const ASSIGN = drawPairs(NAMES, SALT, PAST_DRAWS, FIRST_ATTEMPT);
       const DISPLAY = Object.fromEntries(NAMES.map(n => [key(n), n]));
 
       (function selfCheck() {
